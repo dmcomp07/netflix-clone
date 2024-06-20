@@ -6,6 +6,7 @@ pipeline {
     }
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
+        NVD_API_KEY = credentials('nvd-key') // Add your credential ID here
     }
     stages {
         stage('Clean Workspace') {
@@ -38,7 +39,10 @@ pipeline {
             parallel {
                 stage('OWASP FS Scan') {
                     steps {
-                        dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                        sh '''
+                            dependency-check --project "Netflix" --scan ./ \
+                            --disableYarnAudit --disableNodeAudit --nvdApiKey $NVD_API_KEY
+                        '''
                         dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                     }
                 }
